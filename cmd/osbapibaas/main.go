@@ -17,6 +17,7 @@ package main
 import (
 	"crypto/tls"
 	"crypto/x509"
+	"io"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -100,7 +101,13 @@ K4mhPL/qnKeks8nz9A==
 `
 )
 
+func echo(w http.ResponseWriter, r *http.Request) {
+	io.Copy(w, r.Body)
+}
+
 func main() {
+	http.HandleFunc("/echo", echo)
+
 	log.Println("Try `curl --cert pki/client.cert.pem --key pki/client.key.pem --cacert pki/ca.cert.pem https://localhost.localdomain:443`")
 
 	// TODO read caCert from const var
