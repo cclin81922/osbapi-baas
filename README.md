@@ -10,3 +10,9 @@ export PATH=$PATH:~/go/bin
 ```
 osbapibaas
 ```
+
+# Deploy baas using Helm
+
+```console
+$ TAG=latest PULL=Never make deploy-baas
+```
