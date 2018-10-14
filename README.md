@@ -8,7 +8,7 @@ export PATH=$PATH:~/go/bin
 # Command Line Usage
 
 ```
-osbapibaas
+osbapibaas -port=8443
 ```
 
 # Deploy baas using Helm

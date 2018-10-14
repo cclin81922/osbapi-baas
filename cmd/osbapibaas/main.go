@@ -17,10 +17,13 @@ package main
 import (
 	"crypto/tls"
 	"crypto/x509"
+	"flag"
+	"fmt"
 	"io"
 	"io/ioutil"
 	"log"
 	"net/http"
+	"os"
 )
 
 const (
@@ -105,30 +108,68 @@ func echo(w http.ResponseWriter, r *http.Request) {
 	io.Copy(w, r.Body)
 }
 
+var (
+	flagPort int
+)
+
+func init() {
+	flag.IntVar(&flagPort, "port", 443, "HTTPS PORT")
+	flag.Parse()
+}
+
 func main() {
+	log.Printf("Base url is https://localhost.localdomain:%d/", flagPort)
+
+	// register http routes
 	http.HandleFunc("/echo", echo)
 
-	log.Println("Try `curl --cert pki/client.cert.pem --key pki/client.key.pem --cacert pki/ca.cert.pem https://localhost.localdomain:443`")
+	// make a ca cert pool object
+	caCert := []byte(ca)
+	caCertPool := x509.NewCertPool()
+	caCertPool.AppendCertsFromPEM(caCert)
 
-	// TODO read caCert from const var
-	if caCert, err := ioutil.ReadFile("pki/ca.cert.pem"); err != nil {
-		log.Fatal(err)
-	} else {
-		caCertPool := x509.NewCertPool()
-		caCertPool.AppendCertsFromPEM(caCert)
-
-		tlsConfig := &tls.Config{
-			ClientCAs:  caCertPool,
-			ClientAuth: tls.RequireAndVerifyClientCert,
-		}
-		tlsConfig.BuildNameToCertificate()
-
-		server := &http.Server{
-			Addr:      ":443",
-			TLSConfig: tlsConfig,
-		}
-
-		// TODO read pki/ from const var
-		log.Fatal(server.ListenAndServeTLS("pki/server.cert.pem", "pki/server.key.pem"))
+	// make a tls config object
+	tlsConfig := &tls.Config{
+		ClientCAs:  caCertPool,
+		ClientAuth: tls.RequireAndVerifyClientCert,
 	}
+	tlsConfig.BuildNameToCertificate()
+
+	// make a server object
+	addr := fmt.Sprintf(":%d", flagPort)
+	server := &http.Server{
+		Addr:      addr,
+		TLSConfig: tlsConfig,
+	}
+
+	// make a temp server key file
+	serverKey := []byte(key)
+	serverKeyFile, err := ioutil.TempFile("", "server.key")
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer os.Remove(serverKeyFile.Name())
+	if _, err := serverKeyFile.Write(serverKey); err != nil {
+		log.Fatal(err)
+	}
+	if err := serverKeyFile.Close(); err != nil {
+		log.Fatal(err)
+	}
+
+	// make a temp server cert file
+	serverCert := []byte(cert)
+	serverCertFile, err := ioutil.TempFile("", "server.cert")
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer os.Remove(serverCertFile.Name())
+	if _, err := serverCertFile.Write(serverCert); err != nil {
+		log.Fatal(err)
+	}
+	if err := serverCertFile.Close(); err != nil {
+		log.Fatal(err)
+	}
+
+	// start listening
+	log.Fatal(server.ListenAndServeTLS(serverCertFile.Name(), serverKeyFile.Name()))
 }
