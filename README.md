@@ -11,8 +11,17 @@ export PATH=$PATH:~/go/bin
 osbapibaas -port=8443
 ```
 
-# Deploy baas using Helm
+# Deploy osbapibaas Using Helm
 
-```console
-$ TAG=latest PULL=Never make deploy-baas
+```
+make deploy-baas
+```
+
+# For Developer
+
+Run all tests
+
+```
+echo "127.0.0.1   localhost.localdomain" >> /etc/hosts
+go test github.com/cclin81922/osbapi-baas/cmd/osbapibaas
 ```

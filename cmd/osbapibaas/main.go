@@ -117,7 +117,11 @@ func init() {
 	flag.Parse()
 }
 
-func main() {
+func setup(port int) {
+	flagPort = port
+}
+
+func listenAndServeTLS() {
 	log.Printf("Base url is https://localhost.localdomain:%d/", flagPort)
 
 	// register http routes
@@ -172,4 +176,8 @@ func main() {
 
 	// start listening
 	log.Fatal(server.ListenAndServeTLS(serverCertFile.Name(), serverKeyFile.Name()))
+}
+
+func main() {
+	listenAndServeTLS()
 }
