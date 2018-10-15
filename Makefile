@@ -5,7 +5,7 @@ endif
 
 IMAGE ?= asia.gcr.io/k8s-project-199813/osbapi-baas
 TAG ?= $(shell git describe --tags --always)
-PULL ?= IfNotPresent
+PULL ?= Never
 
 build: ## Builds the app
 	go build -i github.com/cclin81922/osbapi-baas/cmd/osbapibaas
